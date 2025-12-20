@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"log"
 	"net/http"
 	"sync"
 	"sync/atomic"
@@ -13,14 +12,21 @@ import (
 	"github.com/gorilla/websocket"
 )
 
+type Logger interface {
+	Info(v ...any)
+	Error(v ...any)
+}
+
 type JsonRPCClient struct {
-	conn       *websocket.Conn
-	reqID      int
-	reqMutex   sync.Mutex
-	requests   chan *RPCRequest
-	responses  map[int]chan *RPCResponse
-	resMutex   sync.Mutex
-	reqTimeout *atomic.Pointer[time.Duration]
+	conn          *websocket.Conn
+	reqID         int
+	reqMutex      sync.Mutex
+	requests      chan *RPCRequest
+	responses     map[int]chan *RPCResponse
+	resMutex      sync.Mutex
+	reqTimeout    *atomic.Pointer[time.Duration]
+	notifications chan *RPCResponse
+	logger        Logger
 }
 
 func NewJsonRPCClient(url, token string) (*JsonRPCClient, error) {
@@ -38,10 +44,11 @@ func NewJsonRPCClientWithContext(ctx context.Context, url, token string) (*JsonR
 	callTm.Store(&d)
 
 	client := &JsonRPCClient{
-		conn:       conn,
-		requests:   make(chan *RPCRequest, 100),
-		responses:  make(map[int]chan *RPCResponse),
-		reqTimeout: callTm,
+		conn:          conn,
+		requests:      make(chan *RPCRequest, 100),
+		responses:     make(map[int]chan *RPCResponse),
+		notifications: make(chan *RPCResponse, 100),
+		reqTimeout:    callTm,
 	}
 
 	go client.writer()
@@ -52,6 +59,10 @@ func NewJsonRPCClientWithContext(ctx context.Context, url, token string) (*JsonR
 
 func (c *JsonRPCClient) CallTimeout(d time.Duration) {
 	c.reqTimeout.Store(&d)
+}
+
+func (c *JsonRPCClient) Logger(l Logger) {
+	c.logger = l
 }
 
 func (c *JsonRPCClient) nextID() int {
@@ -72,28 +83,38 @@ func (c *JsonRPCClient) reader() {
 	for {
 		_, msg, err := c.conn.ReadMessage()
 		if err != nil {
-			log.Println("read error:", err)
+			c.Log().Error("read error:", err)
 			return
 		}
 
 		var resp RPCResponse
 		if err := json.Unmarshal(msg, &resp); err != nil {
-			log.Println("unmarshal error:", err)
+			c.Log().Error("unmarshal error:", err)
 			continue
 		}
 
-		c.resMutex.Lock()
-		if ch, ok := c.responses[resp.ID]; ok {
-			ch <- &resp
-			close(ch)
-			delete(c.responses, resp.ID)
+		if resp.ID != 0 {
+			c.resMutex.Lock()
+			if ch, ok := c.responses[resp.ID]; ok {
+				ch <- &resp
+				close(ch)
+				delete(c.responses, resp.ID)
+			}
+			c.resMutex.Unlock()
+			continue
 		}
-		c.resMutex.Unlock()
+
+		select {
+		case c.notifications <- &resp:
+		default:
+			c.Log().Info("notification channel full - dropping message")
+		}
 	}
 }
 
 func (c *JsonRPCClient) Call(method string, params interface{}) (*RPCResponse, error) {
 	id := c.nextID()
+
 	req := &RPCRequest{
 		ID:     id,
 		Method: method,
@@ -115,10 +136,14 @@ func (c *JsonRPCClient) Call(method string, params interface{}) (*RPCResponse, e
 	}
 }
 
+func (c *JsonRPCClient) Notifications() <-chan *RPCResponse {
+	return c.notifications
+}
+
 // ====
 
 func authHeader(token string) http.Header {
 	h := http.Header{}
-	h.Set("Authorization", fmt.Sprintf("Bearer: %s", token))
+	h.Set("Authorization", fmt.Sprintf("Bearer %s", token))
 	return h
 }
