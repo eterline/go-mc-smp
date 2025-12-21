@@ -32,7 +32,9 @@ func (rpc *RPCClient) GamerulesGet(ctx context.Context) ([]GameRule, error) {
 
 // GamerulesUpdate - Update game rule value
 func (rpc *RPCClient) GamerulesUpdate(ctx context.Context, rule GameRule) (*GameRule, error) {
-	rule.Type = UntypedGameRule // for correct api usage
+
+	// for correct api usage
+	rule.Type = UntypedGameRule
 
 	method := usage.NewMethod("gamerules").Add("update").String()
 	r, err := rpc.core.CallWithContext(ctx, method, []any{rule})

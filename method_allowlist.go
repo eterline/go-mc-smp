@@ -75,7 +75,7 @@ func (rpc *RPCClient) AllowlistSet(ctx context.Context, p ...Player) error {
 		}
 	}
 
-	method := usage.NewMethod("allowlist").Add("add").String()
+	method := usage.NewMethod("allowlist").Add("set").String()
 	r, err := rpc.core.CallWithContext(ctx, method, []any{p})
 	if err != nil {
 		return err

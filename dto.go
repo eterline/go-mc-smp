@@ -68,6 +68,14 @@ func NewGameRule(value, key string) GameRule {
 	}
 }
 
+func NewGameRuleBoolean(value bool, key string) GameRule {
+	return NewGameRule(strconv.FormatBool(value), key)
+}
+
+func NewGameRuleInteger(value int, key string) GameRule {
+	return NewGameRule(strconv.Itoa(value), key)
+}
+
 func NewGameRuleTyped(value, key string, ruleType GameRuleType) GameRule {
 	if ruleType == UntypedGameRule {
 		return NewGameRule(value, key)
