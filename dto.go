@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net"
 	"net/netip"
+	"strconv"
 	"time"
 
 	"github.com/google/uuid"
@@ -81,6 +82,26 @@ func NewGameRuleTyped(value, key string, ruleType GameRuleType) GameRule {
 
 func (gr GameRule) Untyped() bool {
 	return gr.Type == UntypedGameRule
+}
+
+func (gr GameRule) Boolean() (bool, error) {
+	if gr.Type != BooleanGameRule {
+		return false, errors.New("not boolean rule")
+	}
+	return gr.Value == "true", nil
+}
+
+func (gr GameRule) Integer() (int, error) {
+	if gr.Type != IntegerGameRule {
+		return 0, errors.New("not integer rule")
+	}
+
+	v, err := strconv.Atoi(gr.Value)
+	if err != nil {
+		return 0, fmt.Errorf("invalid value: %w", err)
+	}
+
+	return v, nil
 }
 
 // ============
