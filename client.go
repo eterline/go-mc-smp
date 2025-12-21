@@ -63,10 +63,6 @@ func NewClient(host string, port uint16, token string, opts ...ClientOption) (*R
 		return nil, err
 	}
 
-	if err := validateToken(token); err != nil {
-		return nil, err
-	}
-
 	cfg := defaultClientConfig()
 	for _, opt := range opts {
 		opt(cfg)
@@ -109,11 +105,4 @@ func wsMode(tls bool) string {
 		return "wss"
 	}
 	return "ws"
-}
-
-func validateToken(token string) error {
-	if len(token) != 40 {
-		return fmt.Errorf("invalid token length: expected 40, got %d", len(token))
-	}
-	return nil
 }

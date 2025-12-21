@@ -16,6 +16,8 @@ type Logger interface {
 	Error(v ...any)
 }
 
+// ==========
+
 type JsonRPCClient struct {
 	conn *websocket.Conn
 
