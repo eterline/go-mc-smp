@@ -1,16 +1,14 @@
-package gomcsmp
+package usage
 
-import (
-	"strings"
-)
+import "strings"
 
 type methodBuilder struct {
 	b *strings.Builder
 }
 
-func method(root string) *methodBuilder {
+func NewMethod(root string) *methodBuilder {
 	b := &strings.Builder{}
-	b.Grow(16)
+	b.Grow(64)
 	b.WriteString("minecraft:")
 	b.WriteString(root)
 

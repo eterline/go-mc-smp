@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"net/http"
 	"sync"
-	"sync/atomic"
 	"time"
 
 	"github.com/gorilla/websocket"
@@ -18,47 +17,42 @@ type Logger interface {
 }
 
 type JsonRPCClient struct {
-	conn          *websocket.Conn
-	reqID         int
-	reqMutex      sync.Mutex
-	requests      chan *RPCRequest
+	conn *websocket.Conn
+
+	reqID      int
+	reqMutex   sync.Mutex
+	requests   chan *RPCRequest
+	reqTimeout time.Duration
+
 	responses     map[int]chan *RPCResponse
 	resMutex      sync.Mutex
-	reqTimeout    *atomic.Pointer[time.Duration]
 	notifications chan *RPCResponse
-	logger        Logger
+
+	logger Logger
 }
 
-func NewJsonRPCClient(url, token string) (*JsonRPCClient, error) {
-	return NewJsonRPCClientWithContext(context.Background(), url, token)
+func NewJsonRPCClient(url, token string, callTimeout time.Duration) (*JsonRPCClient, error) {
+	return NewJsonRPCClientWithContext(context.Background(), url, token, callTimeout)
 }
 
-func NewJsonRPCClientWithContext(ctx context.Context, url, token string) (*JsonRPCClient, error) {
+func NewJsonRPCClientWithContext(ctx context.Context, url, token string, callTimeout time.Duration) (*JsonRPCClient, error) {
 	conn, _, err := websocket.DefaultDialer.DialContext(ctx, url, authHeader(token))
 	if err != nil {
 		return nil, err
 	}
-
-	callTm := &atomic.Pointer[time.Duration]{}
-	d := 5 * time.Second
-	callTm.Store(&d)
 
 	client := &JsonRPCClient{
 		conn:          conn,
 		requests:      make(chan *RPCRequest, 100),
 		responses:     make(map[int]chan *RPCResponse),
 		notifications: make(chan *RPCResponse, 100),
-		reqTimeout:    callTm,
+		reqTimeout:    callTimeout,
 	}
 
 	go client.writer()
 	go client.reader()
 
 	return client, nil
-}
-
-func (c *JsonRPCClient) CallTimeout(d time.Duration) {
-	c.reqTimeout.Store(&d)
 }
 
 func (c *JsonRPCClient) Logger(l Logger) {
@@ -74,8 +68,9 @@ func (c *JsonRPCClient) nextID() int {
 
 func (c *JsonRPCClient) writer() {
 	for req := range c.requests {
-		data, _ := json.Marshal(req)
-		c.conn.WriteMessage(websocket.TextMessage, data)
+		if err := c.conn.WriteJSON(req); err != nil {
+			c.Log().Error("write request error:", err)
+		}
 	}
 }
 
@@ -83,14 +78,15 @@ func (c *JsonRPCClient) reader() {
 	for {
 		_, msg, err := c.conn.ReadMessage()
 		if err != nil {
-			c.Log().Error("read error:", err)
+			c.Log().Error("read response error:", err)
 			return
 		}
 
 		var resp RPCResponse
+
 		if err := json.Unmarshal(msg, &resp); err != nil {
-			c.Log().Error("unmarshal error:", err)
-			continue
+			c.Log().Error("read response error:", err)
+			return
 		}
 
 		if resp.ID != 0 {
@@ -98,7 +94,6 @@ func (c *JsonRPCClient) reader() {
 			if ch, ok := c.responses[resp.ID]; ok {
 				ch <- &resp
 				close(ch)
-				delete(c.responses, resp.ID)
 			}
 			c.resMutex.Unlock()
 			continue
@@ -107,37 +102,65 @@ func (c *JsonRPCClient) reader() {
 		select {
 		case c.notifications <- &resp:
 		default:
-			c.Log().Info("notification channel full - dropping message")
+			c.Log().Info("notification channel full: dropping message")
 		}
 	}
 }
 
-func (c *JsonRPCClient) Call(method string, params interface{}) (*RPCResponse, error) {
+func (c *JsonRPCClient) Call(method string, params []any) (*RPCResponse, error) {
+	return c.CallWithContext(context.Background(), method, params)
+}
+
+func (c *JsonRPCClient) CallWithContext(ctx context.Context, method string, params []any) (*RPCResponse, error) {
+
 	id := c.nextID()
 
-	req := &RPCRequest{
-		ID:     id,
-		Method: method,
-		Params: params,
+	req, err := NewRPCRequest(id, method, params)
+	if err != nil {
+		return nil, fmt.Errorf("rpc request encode error: %w", err)
 	}
 
 	respCh := make(chan *RPCResponse, 1)
+
 	c.resMutex.Lock()
 	c.responses[id] = respCh
 	c.resMutex.Unlock()
 
-	c.requests <- req
+	defer func() {
+		c.resMutex.Lock()
+		delete(c.responses, id)
+		c.resMutex.Unlock()
+	}()
 
 	select {
-	case resp := <-respCh:
+	case c.requests <- req:
+	case <-ctx.Done():
+		return nil, ctx.Err()
+	}
+
+	var cancel context.CancelFunc
+	ctx, cancel = context.WithTimeout(ctx, c.reqTimeout)
+	defer cancel()
+
+	select {
+	case resp, ok := <-respCh:
+		if !ok {
+			return nil, fmt.Errorf("rpc response channel closed")
+		}
 		return resp, nil
-	case <-time.After(*c.reqTimeout.Load()):
-		return nil, fmt.Errorf("timeout rpc response")
+
+	case <-ctx.Done():
+		return nil, ctx.Err()
 	}
 }
 
 func (c *JsonRPCClient) Notifications() <-chan *RPCResponse {
 	return c.notifications
+}
+
+func (c *JsonRPCClient) Close() error {
+	close(c.requests)
+	return c.conn.Close()
 }
 
 // ====

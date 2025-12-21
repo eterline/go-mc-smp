@@ -140,6 +140,14 @@ type Message struct {
 	Literal            string   `json:"literal"`
 }
 
+func NewMessage(literal string, translatable string, params ...string) Message {
+	return Message{
+		Literal:            literal,
+		Translatable:       translatable,
+		TranslatableParams: params,
+	}
+}
+
 // ============
 
 type SystemMessage struct {
@@ -153,6 +161,13 @@ type SystemMessage struct {
 type KickPlayer struct {
 	Player  Player  `json:"player"`
 	Message Message `json:"message"`
+}
+
+func NewKickPlayer(name string, msg Message) KickPlayer {
+	return KickPlayer{
+		Player:  NewPlayer(name),
+		Message: msg,
+	}
 }
 
 // ============
