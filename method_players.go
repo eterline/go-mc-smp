@@ -8,6 +8,14 @@ import (
 	"github.com/eterline/go-mc-smp/internal/usage"
 )
 
+// Endpoints are accessible at minecraft:players
+//
+// Path    | Description               | Parameters                | Result
+// --------|---------------------------|---------------------------|------------------------
+// /       | Get all connected players | None                      | players: []Player
+// /kick   | Kick players              | kick: []KickPlayer        | kicked: []Player
+
+// PlayersGet - Get all connected players
 func (rpc *RPCClient) PlayersGet(ctx context.Context) ([]Player, error) {
 	method := usage.NewMethod("players").String()
 	r, err := rpc.core.CallWithContext(ctx, method, nil)
@@ -32,6 +40,7 @@ func isOnline(players []Player, name string) bool {
 	return false
 }
 
+// PlayersKick - Kick players
 func (rpc *RPCClient) PlayersKick(ctx context.Context, kicks ...KickPlayer) ([]Player, error) {
 
 	/*
