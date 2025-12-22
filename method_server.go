@@ -19,7 +19,7 @@ import (
 // ServerStatus - Get server status
 func (rpc *RPCClient) ServerStatus(ctx context.Context) (*ServerState, error) {
 	method := usage.NewMethod("server").Add("status").String()
-	r, err := rpc.core.CallWithContext(ctx, method, nil)
+	r, err := rpc.core.CallWithContext(ctx, method)
 	if err != nil {
 		return nil, err
 	}
@@ -35,7 +35,7 @@ func (rpc *RPCClient) ServerStatus(ctx context.Context) (*ServerState, error) {
 // ServerSave - Save server state
 func (rpc *RPCClient) ServerSave(ctx context.Context, flush bool) (bool, error) {
 	method := usage.NewMethod("server").Add("save").String()
-	r, err := rpc.core.CallWithContext(ctx, method, []any{flush})
+	r, err := rpc.core.CallWithContext(ctx, method, flush)
 	if err != nil {
 		return false, err
 	}
@@ -51,7 +51,7 @@ func (rpc *RPCClient) ServerSave(ctx context.Context, flush bool) (bool, error) 
 // ServerStop - Stop server
 func (rpc *RPCClient) ServerStop(ctx context.Context) (bool, error) {
 	method := usage.NewMethod("server").Add("stop").String()
-	r, err := rpc.core.CallWithContext(ctx, method, nil)
+	r, err := rpc.core.CallWithContext(ctx, method)
 	if err != nil {
 		return false, err
 	}
@@ -67,7 +67,7 @@ func (rpc *RPCClient) ServerStop(ctx context.Context) (bool, error) {
 // ServerSystemMessage - Send a system message
 func (rpc *RPCClient) ServerSystemMessage(ctx context.Context, message SystemMessage) (bool, error) {
 	method := usage.NewMethod("server").Add("system_message").String()
-	r, err := rpc.core.CallWithContext(ctx, method, []any{message})
+	r, err := rpc.core.CallWithContext(ctx, method, message)
 	if err != nil {
 		return false, err
 	}

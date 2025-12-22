@@ -18,7 +18,7 @@ import (
 // PlayersGet - Get all connected players
 func (rpc *RPCClient) PlayersGet(ctx context.Context) (*PlayerRegistry, error) {
 	method := usage.NewMethod("players").String()
-	r, err := rpc.core.CallWithContext(ctx, method, nil)
+	r, err := rpc.core.CallWithContext(ctx, method)
 	if err != nil {
 		return nil, err
 	}
@@ -69,7 +69,7 @@ func (rpc *RPCClient) PlayersKick(ctx context.Context, kicks ...KickPlayer) (*Pl
 	}
 
 	method := usage.NewMethod("players").Add("kick").String()
-	_, _ = rpc.core.CallWithContext(ctx, method, []any{toKick})
+	_, _ = rpc.core.CallWithContext(ctx, method, toKick)
 
 	updatedPlayers, err := rpc.PlayersGet(ctx)
 	if err != nil {

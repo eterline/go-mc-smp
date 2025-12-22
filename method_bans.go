@@ -20,7 +20,7 @@ import (
 // BansGet - Get the ban list
 func (rpc *RPCClient) BansGet(ctx context.Context) ([]UserBan, error) {
 	method := usage.NewMethod("bans").String()
-	r, err := rpc.core.CallWithContext(ctx, method, nil)
+	r, err := rpc.core.CallWithContext(ctx, method)
 	if err != nil {
 		return nil, err
 	}
@@ -36,7 +36,7 @@ func (rpc *RPCClient) BansGet(ctx context.Context) ([]UserBan, error) {
 // BansSet - Set the banlist
 func (rpc *RPCClient) BansSet(ctx context.Context, ban ...UserBan) error {
 	method := usage.NewMethod("bans").Add("set").String()
-	r, err := rpc.core.CallWithContext(ctx, method, []any{ban})
+	r, err := rpc.core.CallWithContext(ctx, method, ban)
 	if err != nil {
 		return err
 	}
@@ -47,7 +47,7 @@ func (rpc *RPCClient) BansSet(ctx context.Context, ban ...UserBan) error {
 // BansAdd - Add players to the ban list
 func (rpc *RPCClient) BansAdd(ctx context.Context, ban ...UserBan) error {
 	method := usage.NewMethod("bans").Add("add").String()
-	r, err := rpc.core.CallWithContext(ctx, method, []any{ban})
+	r, err := rpc.core.CallWithContext(ctx, method, ban)
 	if err != nil {
 		return err
 	}
@@ -58,7 +58,7 @@ func (rpc *RPCClient) BansAdd(ctx context.Context, ban ...UserBan) error {
 // BansRemove - Remove players from ban list
 func (rpc *RPCClient) BansRemove(ctx context.Context, player ...Player) error {
 	method := usage.NewMethod("bans").Add("remove").String()
-	r, err := rpc.core.CallWithContext(ctx, method, []any{player})
+	r, err := rpc.core.CallWithContext(ctx, method, player)
 	if err != nil {
 		return err
 	}
@@ -69,7 +69,7 @@ func (rpc *RPCClient) BansRemove(ctx context.Context, player ...Player) error {
 // BansClear - Clear all players in ban list
 func (rpc *RPCClient) BansClear(ctx context.Context) error {
 	method := usage.NewMethod("bans").Add("clear").String()
-	r, err := rpc.core.CallWithContext(ctx, method, nil)
+	r, err := rpc.core.CallWithContext(ctx, method)
 	if err != nil {
 		return err
 	}

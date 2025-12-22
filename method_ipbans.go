@@ -20,7 +20,7 @@ import (
 // IPBansGet - Get the ip ban list
 func (rpc *RPCClient) IPBansGet(ctx context.Context) ([]IPBan, error) {
 	method := usage.NewMethod("ip_bans").String()
-	r, err := rpc.core.CallWithContext(ctx, method, nil)
+	r, err := rpc.core.CallWithContext(ctx, method)
 	if err != nil {
 		return nil, err
 	}
@@ -36,7 +36,7 @@ func (rpc *RPCClient) IPBansGet(ctx context.Context) ([]IPBan, error) {
 // IPBansSet - Set the ip ban list
 func (rpc *RPCClient) IPBansSet(ctx context.Context, ban ...IPBan) error {
 	method := usage.NewMethod("ip_bans").Add("set").String()
-	r, err := rpc.core.CallWithContext(ctx, method, []any{ban})
+	r, err := rpc.core.CallWithContext(ctx, method, ban)
 	if err != nil {
 		return err
 	}
@@ -47,7 +47,7 @@ func (rpc *RPCClient) IPBansSet(ctx context.Context, ban ...IPBan) error {
 // IPBansAdd - Add players to the ip ban list
 func (rpc *RPCClient) IPBansAdd(ctx context.Context, ban ...IPBan) error {
 	method := usage.NewMethod("ip_bans").Add("add").String()
-	r, err := rpc.core.CallWithContext(ctx, method, []any{ban})
+	r, err := rpc.core.CallWithContext(ctx, method, ban)
 	if err != nil {
 		return err
 	}
@@ -58,7 +58,7 @@ func (rpc *RPCClient) IPBansAdd(ctx context.Context, ban ...IPBan) error {
 // IPBansRemove - Remove players from ip ban list
 func (rpc *RPCClient) IPBansRemove(ctx context.Context, player ...IPBan) error {
 	method := usage.NewMethod("ip_bans").Add("remove").String()
-	r, err := rpc.core.CallWithContext(ctx, method, []any{player})
+	r, err := rpc.core.CallWithContext(ctx, method, player)
 	if err != nil {
 		return err
 	}
@@ -69,7 +69,7 @@ func (rpc *RPCClient) IPBansRemove(ctx context.Context, player ...IPBan) error {
 // IPBansClear - Clear all players in ip ban list
 func (rpc *RPCClient) IPBansClear(ctx context.Context) error {
 	method := usage.NewMethod("ip_bans").Add("clear").String()
-	r, err := rpc.core.CallWithContext(ctx, method, nil)
+	r, err := rpc.core.CallWithContext(ctx, method)
 	if err != nil {
 		return err
 	}

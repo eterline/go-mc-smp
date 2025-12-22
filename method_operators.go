@@ -20,7 +20,7 @@ import (
 // OperatorsGet - Get all oped players
 func (rpc *RPCClient) OperatorsGet(ctx context.Context) ([]Operator, error) {
 	method := usage.NewMethod("operators").String()
-	r, err := rpc.core.CallWithContext(ctx, method, nil)
+	r, err := rpc.core.CallWithContext(ctx, method)
 	if err != nil {
 		return nil, err
 	}
@@ -36,7 +36,7 @@ func (rpc *RPCClient) OperatorsGet(ctx context.Context) ([]Operator, error) {
 // OperatorsSet - Set all oped players
 func (rpc *RPCClient) OperatorsSet(ctx context.Context, p ...Operator) error {
 	method := usage.NewMethod("operators").Add("set").String()
-	r, err := rpc.core.CallWithContext(ctx, method, []any{p})
+	r, err := rpc.core.CallWithContext(ctx, method, p)
 	if err != nil {
 		return err
 	}
@@ -47,7 +47,7 @@ func (rpc *RPCClient) OperatorsSet(ctx context.Context, p ...Operator) error {
 // OperatorsAdd - Op players
 func (rpc *RPCClient) OperatorsAdd(ctx context.Context, p ...Operator) error {
 	method := usage.NewMethod("operators").Add("add").String()
-	r, err := rpc.core.CallWithContext(ctx, method, []any{p})
+	r, err := rpc.core.CallWithContext(ctx, method, p)
 	if err != nil {
 		return err
 	}
@@ -58,7 +58,7 @@ func (rpc *RPCClient) OperatorsAdd(ctx context.Context, p ...Operator) error {
 // OperatorsRemove - Deop players
 func (rpc *RPCClient) OperatorsRemove(ctx context.Context, p ...Player) error {
 	method := usage.NewMethod("operators").Add("remove").String()
-	r, err := rpc.core.CallWithContext(ctx, method, []any{p})
+	r, err := rpc.core.CallWithContext(ctx, method, p)
 	if err != nil {
 		return err
 	}
@@ -69,7 +69,7 @@ func (rpc *RPCClient) OperatorsRemove(ctx context.Context, p ...Player) error {
 // OperatorsClear - Deop all players
 func (rpc *RPCClient) OperatorsClear(ctx context.Context) error {
 	method := usage.NewMethod("operators").Add("clear").String()
-	r, err := rpc.core.CallWithContext(ctx, method, nil)
+	r, err := rpc.core.CallWithContext(ctx, method)
 	if err != nil {
 		return err
 	}

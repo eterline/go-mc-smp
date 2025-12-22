@@ -21,7 +21,7 @@ import (
 // AllowlistGet - Get the allowlist
 func (rpc *RPCClient) AllowlistGet(ctx context.Context) (*PlayerRegistry, error) {
 	method := usage.NewMethod("allowlist").String()
-	r, err := rpc.core.CallWithContext(ctx, method, nil)
+	r, err := rpc.core.CallWithContext(ctx, method)
 	if err != nil {
 		return nil, err
 	}
@@ -37,7 +37,7 @@ func (rpc *RPCClient) AllowlistGet(ctx context.Context) (*PlayerRegistry, error)
 // AllowlistAdd - Add players to the allowlist
 func (rpc *RPCClient) AllowlistAdd(ctx context.Context, p ...Player) error {
 	method := usage.NewMethod("allowlist").Add("add").String()
-	r, err := rpc.core.CallWithContext(ctx, method, []any{p})
+	r, err := rpc.core.CallWithContext(ctx, method, p)
 	if err != nil {
 		return err
 	}
@@ -48,7 +48,7 @@ func (rpc *RPCClient) AllowlistAdd(ctx context.Context, p ...Player) error {
 // AllowlistRemove - Remove players from allowlist
 func (rpc *RPCClient) AllowlistRemove(ctx context.Context, p ...Player) error {
 	method := usage.NewMethod("allowlist").Add("remove").String()
-	r, err := rpc.core.CallWithContext(ctx, method, []any{p})
+	r, err := rpc.core.CallWithContext(ctx, method, p)
 	if err != nil {
 		return err
 	}
@@ -59,7 +59,7 @@ func (rpc *RPCClient) AllowlistRemove(ctx context.Context, p ...Player) error {
 // AllowlistClear - Clear all players in allowlist
 func (rpc *RPCClient) AllowlistClear(ctx context.Context) error {
 	method := usage.NewMethod("allowlist").Add("clear").String()
-	r, err := rpc.core.CallWithContext(ctx, method, nil)
+	r, err := rpc.core.CallWithContext(ctx, method)
 	if err != nil {
 		return err
 	}
@@ -76,7 +76,7 @@ func (rpc *RPCClient) AllowlistSet(ctx context.Context, p ...Player) error {
 	}
 
 	method := usage.NewMethod("allowlist").Add("set").String()
-	r, err := rpc.core.CallWithContext(ctx, method, []any{p})
+	r, err := rpc.core.CallWithContext(ctx, method, p)
 	if err != nil {
 		return err
 	}

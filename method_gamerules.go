@@ -17,7 +17,7 @@ import (
 // GamerulesGet - Get the available game rule keys and their current values
 func (rpc *RPCClient) GamerulesGet(ctx context.Context) ([]GameRule, error) {
 	method := usage.NewMethod("gamerules").String()
-	r, err := rpc.core.CallWithContext(ctx, method, nil)
+	r, err := rpc.core.CallWithContext(ctx, method)
 	if err != nil {
 		return nil, err
 	}
@@ -37,7 +37,7 @@ func (rpc *RPCClient) GamerulesUpdate(ctx context.Context, rule GameRule) (*Game
 	rule.Type = UntypedGameRule
 
 	method := usage.NewMethod("gamerules").Add("update").String()
-	r, err := rpc.core.CallWithContext(ctx, method, []any{rule})
+	r, err := rpc.core.CallWithContext(ctx, method, rule)
 	if err != nil {
 		return nil, err
 	}

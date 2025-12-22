@@ -109,13 +109,17 @@ func (c *JsonRPCClient) reader() {
 	}
 }
 
-func (c *JsonRPCClient) Call(method string, params []any) (*RPCResponse, error) {
+func (c *JsonRPCClient) Call(method string, params ...any) (*RPCResponse, error) {
 	return c.CallWithContext(context.Background(), method, params)
 }
 
-func (c *JsonRPCClient) CallWithContext(ctx context.Context, method string, params []any) (*RPCResponse, error) {
+func (c *JsonRPCClient) CallWithContext(ctx context.Context, method string, params ...any) (*RPCResponse, error) {
 
 	id := c.nextID()
+
+	if len(params) == 0 {
+		params = nil
+	}
 
 	req, err := NewRPCRequest(id, method, params)
 	if err != nil {
