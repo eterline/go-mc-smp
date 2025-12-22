@@ -1,6 +1,7 @@
 package gomcsmp
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net"
@@ -10,6 +11,133 @@ import (
 
 	"github.com/google/uuid"
 )
+
+type PlayerRegistry struct {
+	data map[string]*uuid.UUID
+}
+
+func newPlayerRegistry(len int) *PlayerRegistry {
+	return &PlayerRegistry{
+		data: make(map[string]*uuid.UUID, len),
+	}
+}
+
+func NewPlayerRegistry(players []Player) *PlayerRegistry {
+	r := &PlayerRegistry{
+		data: make(map[string]*uuid.UUID, len(players)),
+	}
+
+	for _, p := range players {
+		if p.Name == "" {
+			continue
+		}
+		r.data[p.Name] = p.ID
+	}
+
+	return r
+}
+
+func NewPlayerRegistryNames(name ...string) *PlayerRegistry {
+	r := newPlayerRegistry(len(name))
+
+	for _, p := range name {
+		if p == "" {
+			continue
+		}
+		r.data[p] = nil
+	}
+
+	return r
+}
+
+func (r *PlayerRegistry) Players() []Player {
+	if r == nil {
+		return nil
+	}
+
+	players := make([]Player, 0, len(r.data))
+
+	for name, id := range r.data {
+		players = append(players, Player{
+			Name: name,
+			ID:   id,
+		})
+	}
+
+	return players
+}
+
+func (r *PlayerRegistry) MarshalJSON() ([]byte, error) {
+	return json.Marshal(r.Players())
+}
+
+func (r *PlayerRegistry) UnmarshalJSON(b []byte) error {
+	var players []Player
+	if err := json.Unmarshal(b, &players); err != nil {
+		return err
+	}
+
+	r.data = make(map[string]*uuid.UUID, len(players))
+	for _, p := range players {
+		r.data[p.Name] = p.ID
+	}
+
+	return nil
+}
+
+func (r *PlayerRegistry) Filter(f func(data Player) bool) *PlayerRegistry {
+	newR := newPlayerRegistry(0)
+	for _, player := range r.Players() {
+		if f(player) {
+			newR.Add(player)
+		}
+	}
+	return newR
+}
+
+// ============
+
+func (r *PlayerRegistry) Add(player Player) {
+	r.data[player.Name] = player.ID
+}
+
+func (r *PlayerRegistry) Online() int {
+	return len(r.data)
+}
+
+func (r *PlayerRegistry) IsOnline(name string) bool {
+	_, ok := r.data[name]
+	return ok
+}
+
+func (r *PlayerRegistry) UUIDByName(name string) (id uuid.UUID, ok bool) {
+	srcId, ok := r.data[name]
+	if !ok {
+		return uuid.Nil, false
+	}
+
+	if srcId == nil {
+		return uuid.Nil, false
+	}
+
+	return *srcId, true
+}
+
+func (r *PlayerRegistry) PlayerByName(name string) (player Player, ok bool) {
+	srcId, ok := r.data[name]
+	if !ok {
+		return Player{}, false
+	}
+
+	player = Player{
+		Name: name,
+		ID:   srcId,
+	}
+
+	return player, true
+}
+
+// ============
 
 // Player - represents a Minecraft player.
 // Name is the player's username, ID is the optional UUID of the player.
@@ -24,6 +152,10 @@ func NewPlayer(name string) Player {
 	return Player{
 		Name: name,
 	}
+}
+
+func (player Player) Kick(literal string, translatable string, params ...string) KickPlayer {
+	return NewKickPlayer(player.Name, NewMessage(literal, translatable, params...))
 }
 
 // ============
@@ -180,9 +312,9 @@ func NewMessage(literal string, translatable string, params ...string) Message {
 // ============
 
 type SystemMessage struct {
-	ReceivingPlayers []Player `json:"receivingPlayers"`
-	Overlay          bool     `json:"overlay"`
-	Message          Message  `json:"message"`
+	ReceivingPlayers *PlayerRegistry `json:"receivingPlayers"`
+	Overlay          bool            `json:"overlay"`
+	Message          Message         `json:"message"`
 }
 
 // ============
@@ -315,20 +447,7 @@ type Version struct {
 // ============
 
 type ServerState struct {
-	Players []Player `json:"players"`
-	Started bool     `json:"started"`
-	Version Version  `json:"version"`
-}
-
-func (ss ServerState) Online() int {
-	return len(ss.Players)
-}
-
-func (ss ServerState) IsOnline(player Player) bool {
-	for _, onlinePlayer := range ss.Players {
-		if onlinePlayer.Name == player.Name {
-			return true
-		}
-	}
-	return false
+	Players *PlayerRegistry `json:"players"`
+	Started bool            `json:"started"`
+	Version Version         `json:"version"`
 }

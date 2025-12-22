@@ -44,5 +44,3 @@ package gomcsmp
 // /status_replies/set               | Enable or disable status replies
 // /entity_broadcast_range           | Get entity broadcast range (percentage)
 // /entity_broadcast_range/set       | Set entity broadcast range (percentage)
-
-// TODO: will be later

@@ -9,6 +9,8 @@ import (
 	"github.com/eterline/go-mc-smp/internal/jsonrpc"
 )
 
+// ================
+
 type ClientOption func(*clientConfig)
 
 type clientConfig struct {

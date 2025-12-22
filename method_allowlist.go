@@ -19,19 +19,19 @@ import (
 // /clear    | Clear all players in the allowlist                | None              | allowlist: []Player
 
 // AllowlistGet - Get the allowlist
-func (rpc *RPCClient) AllowlistGet(ctx context.Context) ([]Player, error) {
+func (rpc *RPCClient) AllowlistGet(ctx context.Context) (*PlayerRegistry, error) {
 	method := usage.NewMethod("allowlist").String()
 	r, err := rpc.core.CallWithContext(ctx, method, nil)
 	if err != nil {
 		return nil, err
 	}
 
-	data, err := jsonrpc.DecodeRPCResult[[]Player](r)
+	data, err := jsonrpc.DecodeRPCResult[PlayerRegistry](r)
 	if err != nil {
 		return nil, err
 	}
 
-	return *data, nil
+	return data, nil
 }
 
 // AllowlistAdd - Add players to the allowlist

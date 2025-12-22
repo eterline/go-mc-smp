@@ -16,32 +16,23 @@ import (
 // /kick   | Kick players              | kick: []KickPlayer        | kicked: []Player
 
 // PlayersGet - Get all connected players
-func (rpc *RPCClient) PlayersGet(ctx context.Context) ([]Player, error) {
+func (rpc *RPCClient) PlayersGet(ctx context.Context) (*PlayerRegistry, error) {
 	method := usage.NewMethod("players").String()
 	r, err := rpc.core.CallWithContext(ctx, method, nil)
 	if err != nil {
 		return nil, err
 	}
 
-	data, err := jsonrpc.DecodeRPCResult[[]Player](r)
+	data, err := jsonrpc.DecodeRPCResult[PlayerRegistry](r)
 	if err != nil {
 		return nil, err
 	}
 
-	return *data, nil
-}
-
-func isOnline(players []Player, name string) bool {
-	for _, player := range players {
-		if player.Name == name {
-			return true
-		}
-	}
-	return false
+	return data, nil
 }
 
 // PlayersKick - Kick players
-func (rpc *RPCClient) PlayersKick(ctx context.Context, kicks ...KickPlayer) ([]Player, error) {
+func (rpc *RPCClient) PlayersKick(ctx context.Context, kicks ...KickPlayer) (*PlayerRegistry, error) {
 
 	/*
 		NOTE: When kicking a player via RPC, an "Already retired" error may occur.
@@ -68,7 +59,7 @@ func (rpc *RPCClient) PlayersKick(ctx context.Context, kicks ...KickPlayer) ([]P
 
 	toKick := make([]KickPlayer, 0, len(kicks))
 	for _, k := range kicks {
-		if isOnline(players, k.Player.Name) {
+		if players.IsOnline(k.Player.Name) {
 			toKick = append(toKick, k)
 		}
 	}
