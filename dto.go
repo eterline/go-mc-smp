@@ -158,6 +158,26 @@ func (player Player) Kick(literal string, translatable string, params ...string)
 	return NewKickPlayer(player.Name, NewMessage(literal, translatable, params...))
 }
 
+func (player Player) SystemMessageOverlay(literal string, translatable string, params ...string) SystemMessage {
+	p := newPlayerRegistry(1)
+	p.Add(player)
+	return SystemMessage{
+		ReceivingPlayers: p,
+		Overlay:          true,
+		Message:          NewMessage(literal, translatable, params...),
+	}
+}
+
+func (player Player) SystemMessage(literal string, translatable string, params ...string) SystemMessage {
+	p := newPlayerRegistry(1)
+	p.Add(player)
+	return SystemMessage{
+		ReceivingPlayers: p,
+		Overlay:          false,
+		Message:          NewMessage(literal, translatable, params...),
+	}
+}
+
 // ============
 
 type Operator struct {

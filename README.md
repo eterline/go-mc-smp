@@ -18,7 +18,9 @@ go get github.com/eterline/go-mc-smp
 - Gamerules: list, update
 - Fully asynchronous JSON-RPC over WebSocket
 - Context support and configurable call timeout
-- Another in process
+- Server notification event listening
+
+
 ## Usage
 
 ```go
@@ -54,6 +56,65 @@ func main() {
 ```
 Sending a System Message
 ![Use Screen](./screen/system_message.png)
+
+## Usage with notification events
+
+```go
+package main
+
+import (
+	"context"
+	"fmt"
+
+	gomcsmp "github.com/eterline/go-mc-smp"
+)
+
+func main() {
+	smp, err := gomcsmp.NewClient("127.0.0.1", 9100, "YOUR_RPC_TOKEN")
+	if err != nil {
+		panic(err)
+	}
+	defer smp.Close()
+
+	ctx := context.TODO()
+
+	// USE WITH NEW CHANNEL CREATE!
+	// IF YOU WILL USE THAT IN for{}!
+	// THAT CAN CAUSE GORUTINES LEAK!
+	gamerulesCh := smp.NotifyGamerulesUpdates(ctx)
+	playersJoinedCh := smp.NotifyPlayersJoined(ctx)
+	playersLeftCh := smp.NotifyPlayersLeft(ctx)
+	serverSavedCh := smp.NotifyServerSaved(ctx)
+
+	for {
+		select {
+		case u, ok := <-gamerulesCh:
+			if !ok {
+				return
+			}
+			fmt.Println("gamerule update", u.Key, u.Value)
+
+		case p, ok := <-playersJoinedCh:
+			if !ok {
+				return
+			}
+			fmt.Println("player joined", p.Name, p.ID)
+
+		case p, ok := <-playersLeftCh:
+			if !ok {
+				return
+			}
+			fmt.Println("player left", p.Name, p.ID)
+
+		case <-serverSavedCh:
+			fmt.Println("server saved world")
+		}
+	}
+}
+```
+
+![Use Screen](./screen/server_events.png)
+![Use Screen](./screen/image.png)
 
 ## License
 

@@ -56,7 +56,8 @@ func WithCallTimeout(t time.Duration) ClientOption {
 // ================
 
 type RPCClient struct {
-	core *jsonrpc.JsonRPCClient
+	core   *jsonrpc.JsonRPCClient
+	notify *notificationPipe
 }
 
 func NewClient(host string, port uint16, token string, opts ...ClientOption) (*RPCClient, error) {
@@ -81,13 +82,25 @@ func NewClient(host string, port uint16, token string, opts ...ClientOption) (*R
 		return nil, err
 	}
 
-	return &RPCClient{
-		core: core,
-	}, nil
+	client := &RPCClient{
+		core:   core,
+		notify: newNotificationPipe(),
+	}
+
+	go client.poolNotifications()
+
+	return client, nil
 }
 
 func (rpc *RPCClient) Close() error {
 	return rpc.core.Close()
+}
+
+func (rpc *RPCClient) poolNotifications() {
+	defer rpc.notify.Close()
+	for n := range rpc.core.Notifications() {
+		rpc.notify.Push(n.Method, n)
+	}
 }
 
 // ================
