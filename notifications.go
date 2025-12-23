@@ -59,10 +59,12 @@ func (np *notificationPipe) Unregister(method string) {
 
 func (np *notificationPipe) Push(method string, res *jsonrpc.RPCResponse) {
 	np.mu.RLock()
+
 	if np.closed {
 		np.mu.RUnlock()
 		return
 	}
+
 	ch, ok := np.pipe[method]
 	np.mu.RUnlock()
 
@@ -70,8 +72,7 @@ func (np *notificationPipe) Push(method string, res *jsonrpc.RPCResponse) {
 		return
 	}
 
-	select {
-	case ch <- res:
-	default:
-	}
+	go func() {
+		ch <- res
+	}()
 }

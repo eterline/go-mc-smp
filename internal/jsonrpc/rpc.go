@@ -71,7 +71,7 @@ func (c *JsonRPCClient) nextID() int {
 func (c *JsonRPCClient) writer() {
 	for req := range c.requests {
 		if err := c.conn.WriteJSON(req); err != nil {
-			c.Log().Error("write request error:", err)
+			c.Log().Error(ErrWriteRequest.Wrap(err).Error())
 		}
 	}
 }
@@ -80,14 +80,14 @@ func (c *JsonRPCClient) reader() {
 	for {
 		_, msg, err := c.conn.ReadMessage()
 		if err != nil {
-			c.Log().Error("read response error:", err)
+			c.Log().Error(ErrReadResponse.Wrap(err).Error())
 			return
 		}
 
 		var resp RPCResponse
 
 		if err := json.Unmarshal(msg, &resp); err != nil {
-			c.Log().Error("read response error:", err)
+			c.Log().Error(ErrReadResponse.Wrap(err).Error())
 			return
 		}
 
@@ -104,7 +104,7 @@ func (c *JsonRPCClient) reader() {
 		select {
 		case c.notifications <- &resp:
 		default:
-			c.Log().Info("notification channel full: dropping message")
+			c.Log().Info(ErrNotifyChannelOverflow.Error())
 		}
 	}
 }
@@ -123,7 +123,7 @@ func (c *JsonRPCClient) CallWithContext(ctx context.Context, method string, para
 
 	req, err := NewRPCRequest(id, method, params)
 	if err != nil {
-		return nil, fmt.Errorf("rpc request encode error: %w", err)
+		return nil, ErrEncodeRequest.Wrap(err)
 	}
 
 	respCh := make(chan *RPCResponse, 1)
@@ -141,7 +141,7 @@ func (c *JsonRPCClient) CallWithContext(ctx context.Context, method string, para
 	select {
 	case c.requests <- req:
 	case <-ctx.Done():
-		return nil, ctx.Err()
+		return nil, ErrContext.Wrap(ctx.Err())
 	}
 
 	var cancel context.CancelFunc
@@ -151,12 +151,12 @@ func (c *JsonRPCClient) CallWithContext(ctx context.Context, method string, para
 	select {
 	case resp, ok := <-respCh:
 		if !ok {
-			return nil, fmt.Errorf("rpc response channel closed")
+			return nil, ErrResponseChannelClosed
 		}
 		return resp, nil
 
 	case <-ctx.Done():
-		return nil, ctx.Err()
+		return nil, ErrContext.Wrap(ctx.Err())
 	}
 }
 
@@ -166,7 +166,11 @@ func (c *JsonRPCClient) Notifications() <-chan *RPCResponse {
 
 func (c *JsonRPCClient) Close() error {
 	close(c.requests)
-	return c.conn.Close()
+	err := c.conn.Close()
+	if err != nil {
+		return ErrRpcClose.Wrap(err)
+	}
+	return nil
 }
 
 // ====
