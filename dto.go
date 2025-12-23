@@ -7,6 +7,7 @@ import (
 	"net"
 	"net/netip"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -51,7 +52,7 @@ func NewPlayerRegistryNames(name ...string) *PlayerRegistry {
 }
 
 func (r *PlayerRegistry) Players() []Player {
-	if r == nil {
+	if r == nil || len(r.data) == 0 {
 		return nil
 	}
 
@@ -458,6 +459,35 @@ func (ub UserBan) Expired() bool {
 type Version struct {
 	Protocol int    `json:"protocol"`
 	Name     string `json:"name"`
+}
+
+func parseSub(s string) (v int, ok bool) {
+	av, err := strconv.Atoi(s)
+	if err != nil {
+		return 0, false
+	}
+	return av, true
+}
+
+func (v Version) VersionNumbers() (major, minor, patch int) {
+	sub := strings.Split(v.Name, ".")
+	if len(sub) != 3 {
+		return 0, 0, 0
+	}
+
+	var ok bool
+
+	if major, ok = parseSub(sub[0]); !ok {
+		return 0, 0, 0
+	}
+	if minor, ok = parseSub(sub[1]); !ok {
+		return 0, 0, 0
+	}
+	if patch, ok = parseSub(sub[2]); !ok {
+		return 0, 0, 0
+	}
+
+	return major, minor, patch
 }
 
 // ============

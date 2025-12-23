@@ -46,9 +46,9 @@ func NewJsonRPCClientWithContext(ctx context.Context, url, token string, callTim
 
 	client := &JsonRPCClient{
 		conn:          conn,
-		requests:      make(chan *RPCRequest, 100),
+		requests:      make(chan *RPCRequest, 16),
 		responses:     make(map[int]chan *RPCResponse),
-		notifications: make(chan *RPCResponse, 100),
+		notifications: make(chan *RPCResponse, 16),
 		reqTimeout:    callTimeout,
 	}
 

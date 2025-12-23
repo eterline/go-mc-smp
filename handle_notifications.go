@@ -132,3 +132,83 @@ func (rpc *RPCClient) NotifyGamerulesUpdates(ctx context.Context) <-chan GameRul
 
 	return notifyStream[GameRule](ctx, rpc.notify, method, false)
 }
+
+// ===========
+
+func (rpc *RPCClient) NotifyOperatorsAdded(ctx context.Context) <-chan Operator {
+	method := usage.NewMethod("notification").
+		Add("operators").
+		Add("added").
+		String()
+
+	return notifyStream[Operator](ctx, rpc.notify, method, false)
+}
+
+func (rpc *RPCClient) NotifyOperatorsRemoved(ctx context.Context) <-chan Operator {
+	method := usage.NewMethod("notification").
+		Add("operators").
+		Add("removed").
+		String()
+
+	return notifyStream[Operator](ctx, rpc.notify, method, false)
+}
+
+// ===========
+
+func (rpc *RPCClient) NotifyAllowlistAdded(ctx context.Context) <-chan Player {
+	method := usage.NewMethod("notification").
+		Add("allowlist").
+		Add("added").
+		String()
+
+	return notifyStream[Player](ctx, rpc.notify, method, false)
+}
+
+func (rpc *RPCClient) NotifyAllowlistRemoved(ctx context.Context) <-chan Player {
+	method := usage.NewMethod("notification").
+		Add("allowlist").
+		Add("removed").
+		String()
+
+	return notifyStream[Player](ctx, rpc.notify, method, false)
+}
+
+// ===========
+
+func (rpc *RPCClient) NotifyIPBansAdded(ctx context.Context) <-chan IPBan {
+	method := usage.NewMethod("notification").
+		Add("ip_bans").
+		Add("added").
+		String()
+
+	return notifyStream[IPBan](ctx, rpc.notify, method, false)
+}
+
+func (rpc *RPCClient) NotifyIPBansRemoved(ctx context.Context) <-chan IPBan {
+	method := usage.NewMethod("notification").
+		Add("ip_bans").
+		Add("removed").
+		String()
+
+	return notifyStream[IPBan](ctx, rpc.notify, method, false)
+}
+
+// ===========
+
+func (rpc *RPCClient) NotifyBansAdded(ctx context.Context) <-chan UserBan {
+	method := usage.NewMethod("notification").
+		Add("bans").
+		Add("added").
+		String()
+
+	return notifyStream[UserBan](ctx, rpc.notify, method, false)
+}
+
+func (rpc *RPCClient) NotifyBansRemoved(ctx context.Context) <-chan UserBan {
+	method := usage.NewMethod("notification").
+		Add("bans").
+		Add("removed").
+		String()
+
+	return notifyStream[UserBan](ctx, rpc.notify, method, false)
+}
