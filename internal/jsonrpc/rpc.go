@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/gorilla/websocket"
@@ -21,7 +22,7 @@ type Logger interface {
 type JsonRPCClient struct {
 	conn *websocket.Conn
 
-	reqID      int
+	reqID      int32
 	reqMutex   sync.Mutex
 	requests   chan *RPCRequest
 	reqTimeout time.Duration
@@ -62,10 +63,7 @@ func (c *JsonRPCClient) Logger(l Logger) {
 }
 
 func (c *JsonRPCClient) nextID() int {
-	c.reqMutex.Lock()
-	defer c.reqMutex.Unlock()
-	c.reqID++
-	return c.reqID
+	return int(atomic.AddInt32(&c.reqID, 1))
 }
 
 func (c *JsonRPCClient) writer() {
