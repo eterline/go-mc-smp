@@ -42,7 +42,7 @@ func (np *notificationPipe) Register(method string) <-chan *jsonrpc.RPCResponse 
 		usage.Panicf("notification handler for '%s' already registered", method)
 	}
 
-	ch := make(chan *jsonrpc.RPCResponse, 8)
+	ch := make(chan *jsonrpc.RPCResponse, 1)
 	np.pipe[method] = ch
 	return ch
 }

@@ -37,11 +37,11 @@ func NewRPCRequest(id int, method string, params []any) (*RPCRequest, error) {
 
 // RPCResponse - a JSON-RPC response.
 type RPCResponse struct {
-	ID     int             `json:"id,omitempty"`
-	Method string          `json:"method"`
-	Params json.RawMessage `json:"params,omitempty"`
-	Result json.RawMessage `json:"result,omitempty"`
-	Error  interface{}     `json:"error,omitempty"`
+	ID     int               `json:"id,omitempty"`
+	Method string            `json:"method"`
+	Params []json.RawMessage `json:"params,omitempty"`
+	Result json.RawMessage   `json:"result,omitempty"`
+	Error  json.RawMessage   `json:"error,omitempty"`
 }
 
 func (r RPCResponse) ParamsNotEmpty() error {
@@ -103,7 +103,7 @@ func DecodeRPCParams[T any](r *RPCResponse) (*T, error) {
 
 	var data T
 
-	if err := json.Unmarshal(r.Params, &data); err != nil {
+	if err := json.Unmarshal(r.Params[0], &data); err != nil {
 		return nil, ErrDecodeResponse.Wrap(err)
 	}
 

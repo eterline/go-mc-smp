@@ -212,27 +212,7 @@ type GameRule struct {
 }
 
 // NewGameRule - creates a new GameRule with the given key and value.
-func NewGameRule(value, key string) GameRule {
-	return GameRule{
-		Type:  UntypedGameRule,
-		Value: value,
-		Key:   key,
-	}
-}
-
-func NewGameRuleBoolean(value bool, key string) GameRule {
-	return NewGameRule(strconv.FormatBool(value), key)
-}
-
-func NewGameRuleInteger(value int, key string) GameRule {
-	return NewGameRule(strconv.Itoa(value), key)
-}
-
-func NewGameRuleTyped(value, key string, ruleType GameRuleType) GameRule {
-	if ruleType == UntypedGameRule {
-		return NewGameRule(value, key)
-	}
-
+func NewGameRule(value, key string, ruleType GameRuleType) GameRule {
 	return GameRule{
 		Type:  ruleType,
 		Value: value,
@@ -240,8 +220,24 @@ func NewGameRuleTyped(value, key string, ruleType GameRuleType) GameRule {
 	}
 }
 
+func NewGameRuleBoolean(value bool, key string) GameRule {
+	return NewGameRule(strconv.FormatBool(value), key, BooleanGameRule)
+}
+
+func NewGameRuleInteger(value int, key string) GameRule {
+	return NewGameRule(strconv.Itoa(value), key, IntegerGameRule)
+}
+
 func (gr GameRule) Untyped() bool {
 	return gr.Type == UntypedGameRule
+}
+
+func (gr GameRule) RuleKey() string {
+	return gr.Key
+}
+
+func (gr GameRule) RuleValue() any {
+	return gr.Value
 }
 
 func (gr GameRule) Boolean() (bool, error) {
