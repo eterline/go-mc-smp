@@ -68,6 +68,20 @@ func (r *PlayerRegistry) Players() []Player {
 	return players
 }
 
+func (r *PlayerRegistry) IDs() []uuid.UUID {
+	if r == nil || len(r.data) == 0 {
+		return nil
+	}
+
+	ids := []uuid.UUID{}
+	for _, id := range r.data {
+		if id != nil && *id != uuid.Nil {
+			ids = append(ids, *id)
+		}
+	}
+	return ids
+}
+
 func (r *PlayerRegistry) MarshalJSON() ([]byte, error) {
 	return json.Marshal(r.Players())
 }
@@ -106,7 +120,7 @@ func (r *PlayerRegistry) Online() int {
 	return len(r.data)
 }
 
-func (r *PlayerRegistry) IsOnline(name string) bool {
+func (r *PlayerRegistry) Contains(name string) bool {
 	_, ok := r.data[name]
 	return ok
 }

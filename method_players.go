@@ -59,7 +59,7 @@ func (rpc *RPCClient) PlayersKick(ctx context.Context, kicks ...KickPlayer) (*Pl
 
 	toKick := make([]KickPlayer, 0, len(kicks))
 	for _, k := range kicks {
-		if players.IsOnline(k.Player.Name) {
+		if players.Contains(k.Player.Name) {
 			toKick = append(toKick, k)
 		}
 	}

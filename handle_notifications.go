@@ -175,22 +175,22 @@ func (rpc *RPCClient) NotifyAllowlistRemoved(ctx context.Context) <-chan Player 
 
 // ===========
 
-func (rpc *RPCClient) NotifyIPBansAdded(ctx context.Context) <-chan IPBan {
+func (rpc *RPCClient) NotifyIPBansAdded(ctx context.Context) <-chan IncomingIPBan {
 	method := usage.NewMethod("notification").
 		Add("ip_bans").
 		Add("added").
 		String()
 
-	return notifyStream[IPBan](ctx, rpc.notify, method, false)
+	return notifyStream[IncomingIPBan](ctx, rpc.notify, method, false)
 }
 
-func (rpc *RPCClient) NotifyIPBansRemoved(ctx context.Context) <-chan IPBan {
+func (rpc *RPCClient) NotifyIPBansRemoved(ctx context.Context) <-chan IncomingIPBan {
 	method := usage.NewMethod("notification").
 		Add("ip_bans").
 		Add("removed").
 		String()
 
-	return notifyStream[IPBan](ctx, rpc.notify, method, false)
+	return notifyStream[IncomingIPBan](ctx, rpc.notify, method, false)
 }
 
 // ===========
